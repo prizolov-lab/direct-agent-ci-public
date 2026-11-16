@@ -1,0 +1,22 @@
+# Dm.Andreyanov / Prizolov Lab — Prizolov Yandex Direct Agent public-ci 0.1.0
+name: public-synthetic-tests
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-tests:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run synthetic tests
+        run: python -m unittest discover -s tests -v
