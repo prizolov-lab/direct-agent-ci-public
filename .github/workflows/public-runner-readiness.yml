@@ -1,0 +1,30 @@
+# Author — Dm.Andreyanov | Brand — Prizolov Lab
+# Product — Prizolov Yandex Direct Agent | public-runner-readiness v1.0.0
+# Safe migration phase: runner health only. NEVER load private repositories, client data or Yandex secrets.
+name: public-runner-readiness
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/public-runner-readiness.yml'
+permissions:
+  contents: read
+concurrency:
+  group: public-runner-readiness
+  cancel-in-progress: false
+jobs:
+  readiness:
+    if: github.repository == 'prizolov-lab/direct-agent-ci-public'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Verify isolated public runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, platform, sys
+          assert sys.version_info >= (3, 10)
+          print(json.dumps({"status": "runner_ready", "python": platform.python_version(), "private_checkout": False, "client_secrets": False, "yandex_api_tested": False}))
+          PY
