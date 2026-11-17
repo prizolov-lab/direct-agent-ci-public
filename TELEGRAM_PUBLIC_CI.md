@@ -70,3 +70,14 @@ No raw transport exception or Telegram response body is logged.
 
 The implementation is connected at code level only after main is updated.
 Credentials and an actual accepted Telegram response must be verified separately; never declare delivery from green synthetic tests.
+
+
+## Verified activation — 2026-11-17 23:14 MSK
+
+The owner configured the two existing-bot credentials in Actions Secrets. Test request
+`notifications/owner/owner_probe_20261117_002.json`, commit `b81c14a27123497a0ff4053bcfae863755f7f539`,
+triggered [run 44167141804](https://github.com/prizolov-lab/direct-agent-ci-public/actions/runs/44167141804).
+The actual sender returned `{"status":"delivered","message_id":530}`. Telegram accepted the test message;
+human reading is not verified. The first pre-configuration probe did not send; do not replay either probe.
+This validates fixed service notifications only. Private report bodies and arbitrary messages remain unsupported.
+No Worker, KV or Telegram webhook changes were made.
