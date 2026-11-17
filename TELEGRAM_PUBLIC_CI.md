@@ -27,3 +27,9 @@ There is no live sender, no Telegram credentials, no private execution of the ag
 ## Follow-up
 
 Keep private and public contract versions aligned with a sanitized JSON schema or manually reviewed interface; never give public PR workflows access to secrets/private repositories. Run private Node integration tests in an isolated trusted environment.
+
+## Synthetic outbox state-machine contract v0.3.0
+
+`telegram_outbox_contract.py` and `tests/test_telegram_outbox_contract.py` specify six additional pure tests for `pending → claimed → delivered/failed/dead`, receipt requirements, retry limits and terminal states.
+
+**Important:** this state machine does not provide persistence, locking, transactional deduplication, retry scheduling or exactly-once Telegram delivery. The actual trusted notification service must implement these with a private durable datastore (for example Cloudflare Durable Objects or a transactional database), and verify Telegram API responses. The public runner must never be configured as the production queue consumer.
