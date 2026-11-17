@@ -1,0 +1,46 @@
+# Author — Dm.Andreyanov | Brand — Prizolov Lab
+# Product — Prizolov Yandex Direct Agent | public-owner-notify v1.0.0
+name: Telegram owner notification
+on:
+  push:
+    branches: [main]
+    paths: ['notifications/owner/*.json']
+  workflow_dispatch:
+    inputs:
+      event:
+        description: Fixed owner service event (no private text)
+        required: true
+        type: choice
+        default: test
+        options:
+          - test
+          - started
+          - completed
+          - blocked
+          - review
+permissions:
+  contents: read
+concurrency:
+  group: telegram-owner-notification
+  cancel-in-progress: false
+jobs:
+  notify:
+    if: github.repository == 'prizolov-lab/direct-agent-ci-public' && github.ref == 'refs/heads/main' && github.actor == 'prizolov-lab' && (github.event_name == 'workflow_dispatch' || github.event_name == 'push') && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Send fixed service event to existing owner bot
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_OWNER_CHAT_ID: ${{ secrets.TELEGRAM_OWNER_CHAT_ID }}
+          NOTICE_BEFORE: ${{ github.event.before }}
+          NOTICE_EVENT: ${{ inputs.event }}
+        run: python telegram_owner_sender.py

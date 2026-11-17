@@ -1,15 +1,19 @@
-# Prizolov Yandex Direct Agent — Public CI Harness
+# Prizolov Yandex Direct Agent — public CI and owner notifications
 
-Author: **Dm.Andreyanov** · Brand: **Prizolov Lab** · Product: **Prizolov Yandex Direct Agent** · Version: **public-ci 0.1.0**
+Author: **Dm.Andreyanov** · Brand: **Prizolov Lab** · Product: **Prizolov Yandex Direct Agent** · Version: **public-owner-notify 1.0.0**
 
-This is a standalone synthetic test harness, not the proprietary agent implementation. No access to private repositories, customer data, billing, credentials, or Yandex APIs. Passing these tests **does not validate** private `direct-agent` PR #1. Private release tests remain mandatory.
+## What works here
 
-Run: `python -m unittest discover -s tests -v`.
+- `public-ci.yml`: dependency-free synthetic security tests on Python 3.10 and 3.12, without secrets.
+- `telegram-owner.yml`: real fixed service notifications to the existing owner's Telegram bot.
+  Runs manually or when the trusted owner adds one new `notifications/owner/<event-id>.json` to main.
+- No private repository checkout, client data, free-form notification text, Yandex API calls or Worker deployment.
 
-Before adding any real code or data, audit contents and history for secrets, personal data, confidential algorithms and licenses.
+For setup and operation, see [TELEGRAM_PUBLIC_CI.md](TELEGRAM_PUBLIC_CI.md).
 
-## Verified CI status (2026-11-16)
+The live workflow requires the existing bot token and owner chat ID as Actions secrets.
+Missing credentials produce an explicit blocked result. Code availability and passing tests alone do not prove live delivery.
+A successful send requires `delivered` and Telegram `message_id`.
 
-The public GitHub Actions run [43886295911](https://github.com/prizolov-lab/direct-agent-ci-public/actions/runs/43886295911) completed successfully on Python 3.10 and Python 3.12. This evidence applies **only** to the synthetic `security_contract.py` reference and its tests, not to the proprietary implementation in `prizolov-lab/direct-agent` or its Draft PR #1.
-
-A safe validation path for private code is to run the actual private test suite on a trusted machine, then record the exact commit SHA and sanitized test summary in the private PR. Do not publish private source code, CI artifacts containing proprietary code, credentials, or customer data in this repository. Passing synthetic tests must never satisfy private release gates by itself.
+Tests: `python -m unittest discover -s tests -v`.
+Public synthetic checks do not validate or release private `direct-agent` code; private release gates remain separate.

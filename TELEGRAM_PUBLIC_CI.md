@@ -1,35 +1,72 @@
-# Telegram notification public CI, v0.2.0
+# Existing Telegram bot through public Actions, v1.0.0
 
 Author: **Dm.Andreyanov** · Brand: **Prizolov Lab** · Product: **Prizolov Yandex Direct Agent**
 
-## Purpose
+## Actual execution path
 
-Use this existing **public synthetic CI** to validate a dependency-free routing/security contract for owner notifications. `public-ci.yml` discovers `tests/test_telegram_notification_contract.py` on Python 3.10 and 3.12 automatically. No changes to workflow permissions, access tokens, or checkout configuration.
+Chat with GitHub connector → add a new public fixed-event marker on main →
+`telegram-owner.yml` on a public GitHub runner → existing Telegram bot → configured owner.
 
-The tests check routing to exactly one synthetic owner, refusal of missing/ambiguous owner, unknown role, malformed event ID, empty message, spoofed chat ID, and **client notifications disabled pending verifiable authorization**.
+This removes the dependency on dispatching `run.yml` in private `direct-agent-data`.
+It does not require a new bot, Cloudflare login, Worker deployment, KV or webhook changes.
 
-## Safe trust boundary
+## One-time credentials
 
-- Public repository: synthetic contract and tests only.
-- Private `direct-agent`: actual Telegram Worker changes, separate draft PR #4, actual source tests.
-- Private `direct-agent-data`: real projects and delivery receipts; never imported into public CI.
-- Cloudflare Worker: live Telegram interface; no deployment from this public CI.
-- Public green checks mean **synthetic behavior is correct**, not that the private agent is deployed or Telegram actually received messages.
+In this repository's Settings → Secrets and variables → Actions, configure:
+- `TELEGRAM_BOT_TOKEN`: token of the existing Prizolov bot.
+- `TELEGRAM_OWNER_CHAT_ID`: numeric ID of the already connected owner's chat.
 
-## What this does not restore
+Use the existing trusted values. Do not create a new bot, post values in chat, commit them, print them,
+or copy private source/customer files here. Adding or transferring credentials requires the owner's approval.
+The GitHub file connector cannot read or provision Actions secrets. Secret setup is a separate secure operation.
 
-There is no live sender, no Telegram credentials, no private execution of the agent, no queue consumer, and no production delivery from the public workflow. Live tests and any deployment require separate secure infrastructure and owner authorization.
+## Send from a connected chat
 
-## Commands
+Create one new file in main with a stable unique event ID, for example
+`notifications/owner/owner_probe_20261117_001.json`:
 
-`python -m unittest discover -s tests -v`
+```json
+{"event":"test"}
+```
 
-## Follow-up
+Allowed events: `test`, `started`, `completed`, `blocked`, `review`.
+Each generates a fixed Russian service notice for the executor Doctor PUH with Moscow timestamp.
+Only the configured owner's chat is accepted. No arbitrary recipient, message text, report contents or
+client names are accepted. Do not put private text into a marker, workflow input, commit message or public log.
 
-Keep private and public contract versions aligned with a sanitized JSON schema or manually reviewed interface; never give public PR workflows access to secrets/private repositories. Run private Node integration tests in an isolated trusted environment.
+Use a new marker only for a genuinely new notification. Do not modify a prior marker.
+A push containing multiple markers is refused. Renamed/modified/deleted markers are refused.
+There is no historical backlog consumer; old markers are not scanned or replayed.
 
-## Synthetic outbox state-machine contract v0.3.0
+Alternatively, run the workflow manually on main with a fixed `event` choice:
 
-`telegram_outbox_contract.py` and `tests/test_telegram_outbox_contract.py` specify six additional pure tests for `pending → claimed → delivered/failed/dead`, receipt requirements, retry limits and terminal states.
+```powershell
+gh workflow run telegram-owner.yml --repo prizolov-lab/direct-agent-ci-public --ref main -f event=test
+```
 
-**Important:** this state machine does not provide persistence, locking, transactional deduplication, retry scheduling or exactly-once Telegram delivery. The actual trusted notification service must implement these with a private durable datastore (for example Cloudflare Durable Objects or a transactional database), and verify Telegram API responses. The public runner must never be configured as the production queue consumer.
+## Verify the result
+
+Find the public workflow run for that exact commit and inspect the sender step.
+Only `{"status":"delivered","message_id":123}` proves Telegram accepted the message.
+It does not prove the human read it.
+Missing credentials report `blocked_missing_or_invalid_...`; no network send occurs.
+A Telegram rejection reports `telegram_rejected`.
+Transport uncertainty or an invalid receipt reports `unknown_no_automatic_retry`.
+
+Do not retry a run or create a new marker after an unknown response before checking Telegram.
+Rerun attempts are intentionally disabled. A fresh manual run/commit is not global exactly-once delivery:
+an authorized user can deliberately issue a new event. Concurrency serializes notices but does not
+provide a cross-run durable outbox. This workflow is not a consumer for private client reports/approvals.
+
+## Trust boundary
+
+Only main in `prizolov-lab/direct-agent-ci-public`, actor `prizolov-lab`, and the first run attempt are allowed.
+Forks, PRs, other actors/branches/events and free-form payloads cannot send.
+The live sender has read-only GitHub permissions and no persisted checkout credentials.
+Synthetic PR/push tests do not receive Telegram secrets. Only the live sending step receives the two named secrets.
+No raw transport exception or Telegram response body is logged.
+
+## Delivery status
+
+The implementation is connected at code level only after main is updated.
+Credentials and an actual accepted Telegram response must be verified separately; never declare delivery from green synthetic tests.
