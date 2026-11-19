@@ -116,6 +116,15 @@ def main():
     except Exception:
         # Fail closed without printing stack traces that may include credential URLs.
         result = {"status": "unknown_no_automatic_retry"}
+    receipt = {"status": result["status"], "message_id": result.get("message_id"),
+               "head_sha": os.environ.get("GITHUB_SHA", ""),
+               "run_id": os.environ.get("GITHUB_RUN_ID", "")}
+    receipt_path = os.environ.get("OWNER_RECEIPT_PATH", "")
+    if receipt_path:
+        try:
+            Path(receipt_path).write_text(json.dumps(receipt), encoding="utf-8")
+        except OSError:
+            return 1
     print(json.dumps(result))
     return 0 if result["status"] == "delivered" else 1
 
