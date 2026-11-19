@@ -20,6 +20,7 @@ MESSAGES = {
     "completed": "Работа исполнителя завершена. Подробности доступны в приватном проекте.",
     "blocked": "Работа исполнителя заблокирована. Требуется проверка приватного проекта.",
     "review": "Результат подготовлен к независимой проверке в приватном проекте.",
+    "evidence_summary_ready": "Сводка проверенных аудитов готова в приватном Evidence Store. Экспертная и финансовая проверки ещё не выполнены. Рекламные действия запрещены.",
 }
 
 
@@ -50,7 +51,7 @@ def send(env, opener=None, now=None):
     if error:
         return {"status": error}
     when = (now or dt.datetime.now(ZoneInfo("Europe/Moscow"))).strftime("%d.%m.%Y %H:%M МСК")
-    text = ("Prizolov Lab — служебное уведомление.\nИсполнитель: Доктор ПУХ.\n" +
+    text = ("Prizolov Lab — служебное уведомление.\nСистема: Prizolov Yandex Direct Agent.\n" +
             when + "\n" + MESSAGES[env.get("NOTICE_EVENT", "test")])
     body = {"chat_id": env["TELEGRAM_OWNER_CHAT_ID"], "text": text, "disable_web_page_preview": True}
     request = urllib.request.Request("https://api.telegram.org/bot" + env["TELEGRAM_BOT_TOKEN"] + "/sendMessage",
