@@ -29,8 +29,18 @@ class OwnerSenderTests(unittest.TestCase):
         request = opener.open.call_args.args[0]
         body = json.loads(request.data)
         self.assertEqual(body["chat_id"], "123")
-        self.assertIn("Доктор ПУХ", body["text"])
+        self.assertIn("Prizolov Yandex Direct Agent", body["text"])
+        self.assertNotIn("Доктор ПУХ", body["text"])
         self.assertNotIn("parse_mode", body)
+
+    def test_evidence_event_has_no_approval(self):
+        env = self.env()
+        env["NOTICE_EVENT"] = "evidence_summary_ready"
+        opener = self.opener({"ok": True, "result": {"message_id": 43, "chat": {"id": 123}}})
+        self.assertEqual(sender.send(env, opener)["status"], "delivered")
+        body = json.loads(opener.open.call_args.args[0].data)
+        self.assertIn("Рекламные действия запрещены", body["text"])
+        self.assertNotIn("klin.doctor-puh.ru", body["text"])
 
     def test_all_fixed_events_are_supported(self):
         for event in sender.MESSAGES:
