@@ -18,6 +18,7 @@ on:
           - completed
           - blocked
           - review
+          - evidence_summary_ready
 permissions:
   contents: read
 concurrency:
